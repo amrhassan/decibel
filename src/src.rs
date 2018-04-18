@@ -58,18 +58,9 @@ pub fn uniform(size: usize, lower_bound: f32, upper_bound: f32) -> Vec<f32> {
 }
 
 pub fn karplus_strong(ss: &[f32], alpha: f32, output_size: usize) -> Vec<f32> {
-
-    let mut out = Vec::with_capacity(output_size);
-
-    let mut last_round = signal::scale(alpha, ss);
-
-    while out.len() < output_size {
-        for &s in last_round.iter() {
-            out.push(s)
-        }
-        last_round = signal::scale(alpha, &last_round)
-    }
-
-    out.truncate(output_size);
-    out
+    let m = ss.len() as f32;
+    (0..output_size).map(|n| {
+        let nf = n as f32;
+        alpha.powf((nf / m).ceil()) * ss[n % ss.len()]
+    }).collect()
 }
