@@ -55,3 +55,15 @@ pub fn play(signal: &[f32], sample_rate: u32) {
 
     rx.recv().unwrap_or(())
 }
+
+pub fn and(ss: &[bool]) -> bool {
+    ss.iter().all(|&b| b)
+}
+
+pub fn or(ss: &[bool]) -> bool {
+    ss.iter().any(|&b| b)
+}
+
+pub fn xor(ss: &[bool]) -> bool {
+    ss.iter().filter(|&&b| b).count() == 1
+}

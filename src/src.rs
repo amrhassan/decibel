@@ -1,4 +1,3 @@
-
 /**
   * Signal sources
   */
@@ -7,43 +6,41 @@ use std::fs::File;
 use simplemad::*;
 use rand::{random, Closed01};
 use signal;
+use mat;
+use mat::{Shape, Matrix};
+use sink;
+use audio::*;
 
-pub struct Audio {
-    pub sample_rate: u32,
-    pub channels: Vec<Vec<f32>>,
-}
 
-impl Audio {
-    pub fn decode_file(file: &File) -> Result<Audio, String> {
-        let decoder = Decoder::decode(file).expect("Failed to decode");
+pub fn decode_audio(file: &File) -> Result<Audio, String> {
+    let decoder = Decoder::decode(file).expect("Failed to decode");
 
-        let mut channels = Vec::new();
-        let mut sr = None;
+    let mut channels = Vec::new();
+    let mut sr = None;
 
-        for decoding_result in decoder {
-            match decoding_result {
-                Err(_) => (),
-                Ok(mut frame) => {
-                    if sr.is_none() {
-                        sr = Some(frame.sample_rate);
-                    }
-                    channels.resize(frame.samples.len(), Vec::new());
-                    for (chan, ss) in channels.iter_mut().zip(frame.samples.iter_mut()) {
-                        for s in ss {
-                            chan.push(s.to_f32())
-                        }
+    for decoding_result in decoder {
+        match decoding_result {
+            Err(_) => (),
+            Ok(mut frame) => {
+                if sr.is_none() {
+                    sr = Some(frame.sample_rate);
+                }
+                channels.resize(frame.samples.len(), Vec::new());
+                for (chan, ss) in channels.iter_mut().zip(frame.samples.iter_mut()) {
+                    for s in ss {
+                        chan.push(s.to_f32())
                     }
                 }
             }
         }
+    }
 
-        match sr {
-            None => Err("Could not find a sample rate!".to_string()),
-            Some(srv) => Ok(Audio {
-                sample_rate: srv,
-                channels,
-            })
-        }
+    match sr {
+        None => Err("Could not find a sample rate!".to_string()),
+        Some(srv) => Ok(Audio {
+            sample_rate: srv,
+            channels,
+        })
     }
 }
 
@@ -63,4 +60,31 @@ pub fn karplus_strong(ss: &[f32], alpha: f32, output_size: usize) -> Vec<f32> {
         let nf = n as f32;
         alpha.powf((nf / m).ceil()) * ss[n % ss.len()]
     }).collect()
+}
+
+pub fn checkered(shape: &Shape) -> Matrix {
+    let mut out = mat::zeros(shape);
+    for index in shape.indices() {
+        let singulared = index.0.iter().map(|ix| ix % 2 == 1).collect::<Vec<bool>>();
+        if sink::xor(&singulared) {
+            out[&index] = 255.0;
+        }
+    }
+    out
+}
+
+#[cfg(test)]
+mod tests {
+    use mat::*;
+    use src;
+
+    #[test]
+    fn generates_checkered_images() {
+        assert_eq!(src::checkered(&Shape(vec![4, 4])).unrolled,
+                   vec![0.0, 255.0, 0.0, 255.0,
+                        255.0, 0.0, 255.0, 0.0,
+                        0.0, 255.0, 0.0, 255.0,
+                        255.0, 0.0, 255.0, 0.0]
+        )
+    }
 }
