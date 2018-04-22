@@ -6,14 +6,23 @@ pub struct Matrix {
     pub unrolled: Vec<f32>,
 }
 
-impl <'a> ops::Index<&'a Index> for Matrix {
+impl Matrix {
+    pub fn new_2d(width: usize, height: usize) -> Matrix {
+        Matrix {
+            shape: Shape(vec![height, width]),
+            unrolled: iter::repeat(0.0).take(width * height).collect()
+        }
+    }
+}
+
+impl<'a> ops::Index<&'a Index> for Matrix {
     type Output = f32;
     fn index(&self, index: &'a Index) -> &f32 {
         &self.unrolled[index.in_unrolled(&self.shape)]
     }
 }
 
-impl <'a> ops::IndexMut<&'a Index> for Matrix {
+impl<'a> ops::IndexMut<&'a Index> for Matrix {
     fn index_mut(&mut self, index: &Index) -> &mut f32 {
         &mut self.unrolled[index.in_unrolled(&self.shape)]
     }
@@ -28,7 +37,11 @@ pub struct Index(pub Vec<usize>);
 
 impl Index {
     fn in_unrolled(&self, shape: &Shape) -> usize {
-            self.0.iter().zip(iter::once(&1).chain(shape.0.iter())).map(|(ix, prev_dim_length)| ix * prev_dim_length).sum()
+        self.0.iter().zip(iter::once(&1).chain(shape.0.iter())).map(|(ix, prev_dim_length)| ix * prev_dim_length).sum()
+    }
+
+    pub fn of_2d(a: usize, b: usize) -> Index {
+        Index(vec![a, b])
     }
 }
 

@@ -3,13 +3,16 @@
   */
 
 use std::fs::File;
+use std::path::Path;
 use simplemad::*;
 use rand::{random, Closed01};
 use signal;
 use mat;
-use mat::{Shape, Matrix};
+use mat::{Shape, Matrix, Index};
 use sink;
 use audio::*;
+use image;
+use image::{GenericImage, Pixel};
 
 
 pub fn decode_audio(file: &File) -> Result<Audio, String> {
@@ -71,6 +74,18 @@ pub fn checkered(shape: &Shape) -> Matrix {
         }
     }
     out
+}
+
+pub fn decode_image_greyscale(path: &Path) -> Result<Matrix, String> {
+    let img = image::open(path).map_err(|err| format!("{}", err))?;
+    let (width, height) = img.dimensions();
+    let mut mat = Matrix::new_2d(width as usize, height as usize);
+
+    for (x, y, px) in img.pixels() {
+        mat[&Index::of_2d(y as usize, x as usize)] = px.to_luma().data[0] as f32;
+    }
+
+    Ok(mat)
 }
 
 #[cfg(test)]
