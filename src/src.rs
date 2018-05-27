@@ -6,7 +6,6 @@ use std::fs::File;
 use std::path::Path;
 use simplemad::*;
 use rand::{random, Closed01};
-use signal;
 use mat;
 use mat::{Shape, Matrix, Index};
 use sink;

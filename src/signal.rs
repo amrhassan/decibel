@@ -60,8 +60,8 @@ pub fn round(ss: &[f32]) -> Vec<f32> {
     ss.iter().map(|&s| s.round()).collect()
 }
 
-/// Discrete Fourier Transform
-pub fn dft(ss: &[f32]) -> Vec<Complex<f32>> {
+/// Discrete Fourier Transform -- analysis
+pub fn dft_analyze(ss: &[f32]) -> Vec<Complex<f32>> {
     let len = ss.len();
     let mut out = Vec::with_capacity(len);
     for k in 0..len {
@@ -72,4 +72,34 @@ pub fn dft(ss: &[f32]) -> Vec<Complex<f32>> {
         }).sum());
     }
     out
+}
+
+/// Discrete Fourier Transform -- synthesis
+pub fn dft_synthesize(ss: &[Complex<f32>]) -> Vec<Complex<f32>> {
+    let len = ss.len();
+    let mut out = Vec::with_capacity(len);
+    for n in 0..len {
+        out.push(ss.iter().enumerate().map(|(k, x)| {
+            let re = 0.0;
+            let im = (2.0 * f32::consts::PI * k as f32 * n as f32) / len as f32;
+            Complex::new(re, im).exp() * x
+        }).sum());
+    }
+    out
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn dft() {
+        let equals = |x: &f32, y: &Complex<f32>| { let Complex { re, im } = x - y; re.abs() < 0.001 && im.abs() < 0.001 };
+
+        let xs = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0];
+        let analyzed = dft_analyze(&xs);
+        let synthesized = dft_synthesize(&analyzed);
+
+        assert!(xs.iter().zip(synthesized.iter()).all(|(x, y)| equals(x, y)))
+    }
 }
