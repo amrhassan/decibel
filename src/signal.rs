@@ -4,6 +4,7 @@ use std::iter::*;
 use sink;
 use std::ops::{Sub, Add};
 use src;
+use num_complex::Complex;
 
 pub fn diff(lhs: &[f32], rhs: &[f32]) -> Vec<f32> {
     element_wise(lhs, rhs, |&a, &b| a - b)
@@ -57,4 +58,18 @@ pub fn repeater(ss: &[f32], noise_amplitude: f32, attenuation: f32) -> Vec<f32> 
 
 pub fn round(ss: &[f32]) -> Vec<f32> {
     ss.iter().map(|&s| s.round()).collect()
+}
+
+/// Discrete Fourier Transform
+pub fn dft(ss: &[f32]) -> Vec<Complex<f32>> {
+    let len = ss.len();
+    let mut out = Vec::with_capacity(len);
+    for k in 0..len {
+        out.push(ss.iter().enumerate().map(|(n, x)| {
+            let re = 0.0;
+            let im = - ((2.0 * f32::consts::PI * n as f32 * k as f32) / len as f32);
+            Complex::new(re, im).exp() * x / len as f32
+        }).sum());
+    }
+    out
 }

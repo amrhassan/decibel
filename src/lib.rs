@@ -2,6 +2,7 @@ extern crate simplemad;
 extern crate cpal;
 extern crate rand;
 extern crate image;
+extern crate num_complex;
 
 pub mod src;
 pub mod sink;
